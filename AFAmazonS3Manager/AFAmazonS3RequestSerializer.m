@@ -241,11 +241,18 @@ static NSString * AFAWSSignatureForRequest(NSURLRequest *request, NSString *buck
                                      error:(NSError *__autoreleasing *)error
 {
     NSMutableURLRequest *request = [super requestWithMethod:method URLString:URLString parameters:parameters error:error];
-
+    
+    // S3 expects parameters as headers for PUT requests
+    if ([method isEqualToString:@"PUT"]) {
+        [parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            [request setValue:obj forHTTPHeaderField:key];
+        }];
+    }
+    
     if (self.sessionToken) {
         [request setValue:self.sessionToken forHTTPHeaderField:@"x-amz-security-token"];
     }
-
+    
     return [[self requestBySettingAuthorizationHeadersForRequest:request error:error] mutableCopy];
 }
 
